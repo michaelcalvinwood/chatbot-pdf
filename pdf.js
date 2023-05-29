@@ -9,6 +9,7 @@ const https = require('https');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const formidable = require('formidable');
 
 const jwt = require('./utils/jwt');
 
@@ -33,7 +34,29 @@ const convertPdfToText = async (req, res) => {
 
     console.log('convertPdfToText token', token);
 
-    res.status(200).json('ok');
+    var form = new formidable.IncomingForm();
+    form.parse(req, async function (err, fields, data) {
+        //console.log('form data', data);
+        if (err) {
+            console.error(err);
+            return res.status(500).json('form error');
+            
+        }
+        const fileName = data['File[]'].filepath;
+        const origName = data['File[]'].originalFilename;
+        let input = fs.readFileSync(fileName, "utf-8");
+        if (!input) {
+            return res.status(400).json('no input')
+        }
+        console.log('input', input);
+        // remove file
+        fs.unlinkSync(fileName);
+
+        return res.status(200).json('ok');
+       
+    });
+
+
 }
 
 app.post('/convertPdfToText', (req, res) => convertPdfToText(req, res));
