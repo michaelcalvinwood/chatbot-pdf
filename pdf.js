@@ -12,6 +12,7 @@ const path = require('path');
 const formidable = require('formidable');
 
 const jwt = require('./utils/jwt');
+const parser = require('./utils/pdf-parse');
 
 const app = express();
 app.use(express.static('public'));
@@ -44,11 +45,14 @@ const convertPdfToText = async (req, res) => {
         }
         const fileName = data['File[]'].filepath;
         const origName = data['File[]'].originalFilename;
-        let input = fs.readFileSync(fileName, "utf-8");
-        if (!input) {
-            return res.status(400).json('no input')
-        }
-        console.log('input', input);
+        // let input = fs.readFileSync(fileName, "utf-8");
+        // if (!input) {
+        //     return res.status(400).json('no input')
+        // }
+
+        const text = await parser.extractPdf(fileName);
+
+        console.log('text', text);
         // remove file
         fs.unlinkSync(fileName);
 
