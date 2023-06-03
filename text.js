@@ -41,23 +41,23 @@ const convertPdfToText = async (req, res) => {
         if (err) {
             console.error(err);
             return res.status(500).json('form error');
-            
+
         }
         const fileName = data['File[]'].filepath;
         const origName = data['File[]'].originalFilename;
-        // let input = fs.readFileSync(fileName, "utf-8");
-        // if (!input) {
-        //     return res.status(400).json('no input')
-        // }
-
+       
         const text = await parser.extractPdf(fileName);
 
-        console.log('text', text);
-        // remove file
+        if (text === false) res.status(500).json('unabled to extract text');
+
+        const language = parser.detectLanguage(text);
+    
+        if (language.confidence < 25) return res.status(401).json('cannot detect language');
+        
+        res.status(200).json(text);
+
         fs.unlinkSync(fileName);
 
-        return res.status(200).json('ok');
-       
     });
 
 
