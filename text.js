@@ -38,6 +38,7 @@ const convertPdfToText = async (req, res) => {
      */
 
     console.log('convertPdfToText token', token);
+    const { userName, userId, email, serverSeries } = token;
 
     var form = new formidable.IncomingForm();
     form.parse(req, async function (err, fields, data) {
@@ -49,9 +50,37 @@ const convertPdfToText = async (req, res) => {
         }
         const fileSize = data['File[]'].size;
 
-        console.log('File Size', fileSize)
+        console.log('File Size', fileSize);
+
+        /*
+         * Charge user for upload
+         */
 
         const fileName = data['File[]'].filepath;
+
+        let request = {
+            url: `https://app-${serverSeries}.instantchatbot.net:6250/chargeUpload`,
+            method: "POST",
+            data: {
+                token,
+                uploadSize: fileSize
+            }
+        }
+
+        let response;
+        try {
+            response = await axios(request);
+        } catch (err) {
+            console.error('convertPdfToText ERROR:', err);
+            fs.unlinkSync(fileName);
+            return res.status(500).json('internal server error');
+        }
+
+        if (response !== 'ok') {
+            fs.unlinkSync(fileName);
+            return res.status(401).json('insufficient credits');
+        }
+
         const origName = data['File[]'].originalFilename;
        
         const text = await parser.extractPdf(fileName);
