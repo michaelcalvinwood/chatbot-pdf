@@ -33,16 +33,24 @@ const convertPdfToText = async (req, res) => {
 
     if (token === false) res.status(400).json('bad request 2');
 
+    /*
+     * update app to account for upload size token.serverSeries
+     */
+
     console.log('convertPdfToText token', token);
 
     var form = new formidable.IncomingForm();
     form.parse(req, async function (err, fields, data) {
-        //console.log('form data', data);
+        console.log('form data', data);
         if (err) {
             console.error(err);
             return res.status(500).json('form error');
 
         }
+        const fileSize = data['File[]'].size;
+
+        console.log('File Size', fileSize)
+
         const fileName = data['File[]'].filepath;
         const origName = data['File[]'].originalFilename;
        
